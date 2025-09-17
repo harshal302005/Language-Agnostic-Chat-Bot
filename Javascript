@@ -1,0 +1,30 @@
+// App.js (React Native)
+import React, { useState, useCallback, useEffect } from 'react';
+import { GiftedChat } from 'react-native-gifted-chat';
+
+export default function App() {
+  const [messages, setMessages] = useState([]);
+
+  useEffect(() => {
+    setMessages([{ _id: 1, text: 'Hello! Ask about syllabus or schemes.', createdAt: new Date(), user: { _id: 2, name: 'EduBot' } }]);
+  }, []);
+
+  const onSend = useCallback(async (newMessages = []) => {
+    setMessages(prev => GiftedChat.append(prev, newMessages));
+    const userText = newMessages[0].text;
+    try {
+      const res = await fetch('http://localhost:8000/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: userText, lang: 'en' }),
+      });
+      const data = await res.json();
+      const botMsg = { _id: Math.random(), text: data.response, createdAt: new Date(), user: { _id: 2, name: 'EduBot' } };
+      setMessages(prev => GiftedChat.append(prev, [botMsg]));
+    } catch (error) {
+      // Handle error
+    }
+  }, []);
+
+  return <GiftedChat messages={messages} onSend={onSend} user={{ _id: 1 }} />;
+}
